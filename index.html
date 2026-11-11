@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Insider Black</title>
+<meta name="theme-color" content="#121016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Insider">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+button,input{touch-action:manipulation}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow pass-the-phone column; each game phase is a full screen with one clear action at the bottom */
+:root{
+  --ink:#121016; --panel:#1c1922; --raise:#26222e; --line:#353041;
+  --bone:#ede7da; --mute:#a39bac; --gold:#d2ad55; --gold-ink:#1a1408;
+  --insider:#e0675a; --common:#7cc0b3;
+  --f-display:"Big Shoulders Display",Impact,"Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--ink);color:var(--bone)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 28px}
+.app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:4px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:34px;height:34px;flex:none}
+.brand b{font-family:var(--f-display);font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.brand small{display:block;font-family:var(--f-mono);font-size:11px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase}
+.link{background:none;border:0;color:var(--mute);font:500 14px var(--f-body);padding:8px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.phase{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:var(--f-display);font-weight:900;font-size:40px;line-height:1;text-transform:uppercase;letter-spacing:.01em;margin:4px 0 0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.04em;margin:0}
+p{margin:0}
+.lede{color:var(--mute);max-width:60ch}
+.lede strong{color:var(--bone);font-weight:600}
+.steps{margin:0;padding:14px 16px 14px 34px;background:var(--panel);border:1px solid var(--line);border-radius:12px;display:grid;gap:6px;color:var(--bone)}
+.steps li::marker{color:var(--gold);font-family:var(--f-mono)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:center}
+.label{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+input[type=text]{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--bone);font:500 17px var(--f-body);padding:12px 14px;border-radius:10px}
+input[type=text]:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent}
+button{font-family:var(--f-body)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn{appearance:none;border:0;border-radius:12px;padding:16px 18px;font-weight:600;font-size:17px;cursor:pointer;background:var(--gold);color:var(--gold-ink);width:100%}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--bone);border:1px solid var(--line)}
+.btn.danger{background:var(--insider);color:#1b0907}
+.stepper{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;width:max-content}
+.stepper button{background:var(--panel);border:0;color:var(--bone);font-size:24px;width:52px;height:52px;cursor:pointer}
+.stepper button:disabled{opacity:.3}
+.stepper output{font-family:var(--f-display);font-weight:900;font-size:30px;width:64px;text-align:center}
+.mtoggle{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:10px;padding:0 12px;height:50px;font:600 13px var(--f-body);cursor:pointer;display:flex;align-items:center;gap:6px}
+.mtoggle[aria-pressed=true]{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.switch .t{font-weight:600}.switch .s{color:var(--mute);font-size:14px}
+.sw{flex:none;width:52px;height:30px;border-radius:30px;background:var(--line);border:0;position:relative;cursor:pointer}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--bone);transition:transform .15s}
+.sw[aria-checked=true]{background:var(--gold)}.sw[aria-checked=true]::after{transform:translateX(22px);background:var(--gold-ink)}
+.sw:disabled{opacity:.35}
+.plist{display:flex;flex-direction:column;gap:8px}
+.pbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);color:var(--bone);border-radius:12px;padding:16px;font:600 18px var(--f-body);cursor:pointer}
+.pbtn .st{font:500 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.pbtn.done{background:transparent;border-style:dashed}
+.pbtn.done .st{color:var(--common)}
+.pbtn[aria-pressed=true]{border-color:var(--gold);background:var(--raise);box-shadow:inset 0 0 0 1px var(--gold)}
+.progress{display:flex;gap:6px}
+.progress span{flex:1;height:5px;border-radius:5px;background:var(--line)}
+.progress span.on{background:var(--gold)}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--mute)}
+.note strong{color:var(--bone)}
+.warn{border-color:var(--insider);color:var(--bone)}
+.secret{min-height:58vh;display:flex;flex-direction:column;justify-content:center;gap:18px;text-align:center;align-items:center}
+.secret .who{font-family:var(--f-display);font-weight:900;font-size:56px;line-height:.95;text-transform:uppercase;word-break:break-word}
+.secret .lede{text-align:center}
+.secret .btn{max-width:360px}
+.choice{display:grid;gap:10px;width:100%;max-width:400px}
+.choice .pbtn{justify-content:center;font-size:20px;padding:20px}
+.choice .pbtn[data-tone=insider][aria-pressed=true]{border-color:var(--insider);box-shadow:inset 0 0 0 1px var(--insider)}
+.choice .pbtn[data-tone=common][aria-pressed=true]{border-color:var(--common);box-shadow:inset 0 0 0 1px var(--common)}
+.tally{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.tbox .n{font-family:var(--f-display);font-weight:900;font-size:56px;line-height:1;font-variant-numeric:tabular-nums}
+.tbox.win{border-color:var(--gold)}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(0,7.5em) 1fr 2.2em;gap:10px;align-items:center}
+.bar .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.bar .track{height:14px;background:var(--panel);border-radius:14px;overflow:hidden}
+.bar .fill{height:100%;background:var(--mute);border-radius:14px}
+.bar.top .fill{background:var(--gold)}
+.bar .c{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+.ledger{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:15px;color:var(--mute)}
+.ledger b{color:var(--bone);font-weight:600}
+.verdict{border-radius:16px;padding:22px 18px;text-align:center;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);background:var(--panel)}
+.verdict .big{font-family:var(--f-display);font-weight:900;font-size:52px;line-height:.95;text-transform:uppercase;text-wrap:balance}
+.verdict.v-common .big{color:var(--common)}
+.verdict.v-insider .big{color:var(--insider)}
+.verdict.v-none .big{color:var(--mute)}
+.card{align-self:center;width:180px;aspect-ratio:5/7;max-width:100%;border-radius:14px;border:2px solid var(--line);background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:12px}
+.card .r{font-family:var(--f-display);font-weight:900;font-size:34px;text-transform:uppercase}
+.card.insider{border-color:var(--insider)}.card.insider .r{color:var(--insider)}
+.card.common{border-color:var(--common)}.card.common .r{color:var(--common)}
+.card.follower{border-color:var(--insider)}.card.follower .r{color:var(--insider)}
+@media (prefers-reduced-motion:no-preference){.card{animation:flip .5s ease-out}}
+@keyframes flip{from{transform:rotateY(90deg)}to{transform:rotateY(0)}}
+.roles{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.roles li{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--panel);border-radius:10px;border:1px solid var(--line)}
+.roles li .rl{font:500 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.roles li.w{border-color:var(--gold)}
+.rl.insider,.rl.follower{color:var(--insider)}.rl.common,.rl.master{color:var(--common)}
+.trophy{color:var(--gold);font-weight:600}
+.confirmbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--insider);border-radius:12px;padding:10px 14px}
+.confirmbar span{flex:1;min-width:10em}
+.confirmbar button{flex:none;width:auto;padding:10px 14px;font-size:15px}
+.err{color:var(--insider);font-size:14px}
+.clock{font-family:var(--f-display);font-weight:900;font-size:min(34vw,150px);line-height:.9;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.01em;padding-block:8px}
+.clock.low{color:var(--insider)}
+.clock.idle{color:var(--mute)}
+.clockwrap{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px 18px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.clockwrap .label{text-align:center}
+.peek{user-select:none;-webkit-user-select:none;touch-action:none}
+.peekword{font-family:var(--f-display);font-weight:900;font-size:30px;text-transform:uppercase;color:var(--gold);text-align:center;min-height:1.2em}
+.secretword{font-family:var(--f-display);font-weight:900;font-size:64px;line-height:1;text-transform:uppercase;color:var(--gold);word-break:break-word}
+.wordline{font-family:var(--f-display);font-weight:700;font-size:26px;text-transform:uppercase;color:var(--gold)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{background:transparent;border:0;color:var(--mute);border-radius:9px;padding:10px 8px;font:600 14px var(--f-body);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--raise);color:var(--bone);box-shadow:inset 0 0 0 1px var(--gold)}
+.passbar{position:fixed;left:0;right:0;bottom:0;z-index:20;border:0;cursor:pointer;background:var(--gold);color:var(--gold-ink);
+  font-family:var(--f-display);font-weight:900;font-size:30px;text-transform:uppercase;letter-spacing:.06em;
+  padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@media (prefers-reduced-motion:no-preference){.passbar span{animation:passflash 1s ease-in-out infinite}}
+@keyframes passflash{0%,100%{opacity:1}50%{opacity:.15}}
+.drum{min-height:62vh;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;text-align:center}
+.drumnum{font-family:var(--f-display);font-weight:900;font-size:min(48vw,220px);line-height:.85;color:var(--gold);font-variant-numeric:tabular-nums}
+.drumnum.pop{animation:drumpop .95s ease-out}
+@keyframes drumpop{0%{transform:scale(2.2);opacity:0}25%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.85);opacity:.2}}
+.verdict.v-common{background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--common) 28%,var(--panel)),var(--panel) 70%);border-color:var(--common)}
+.verdict.v-insider{background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--insider) 28%,var(--panel)),var(--panel) 70%);border-color:var(--insider)}
+.wchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px}
+.wchip{background:var(--gold);color:var(--gold-ink);font-weight:600;border-radius:999px;padding:6px 14px;font-size:16px}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:no-preference){
+  .verdict.boom{animation:shake .5s .35s ease-out}
+  .verdict.boom .big{animation:slam .6s cubic-bezier(.2,1.5,.4,1) both}
+  .verdict.boom .lede,.verdict.boom .phase{animation:fadeup .5s .5s both}
+  .wchip{animation:popin .45s cubic-bezier(.2,1.6,.4,1) both;animation-delay:calc(.8s + var(--d)*.15s)}
+  .roles li{animation:deal .45s ease-out both;animation-delay:calc(1.2s + var(--d)*.18s);transform-origin:left center}
+}
+@keyframes slam{0%{transform:scale(3);opacity:0;letter-spacing:.3em}60%{opacity:1}100%{transform:scale(1);letter-spacing:normal}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-.6deg)}40%{transform:translateX(6px) rotate(.6deg)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popin{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:none}}
+@keyframes deal{from{opacity:0;transform:perspective(600px) rotateY(-80deg) translateX(-20px)}to{opacity:1;transform:none}}
+#word-input{text-align:center;font-size:22px;text-transform:uppercase;width:100%;max-width:400px;flex:none}
+
+/* ---- one-screen layout: everything fits the phone, nothing scrolls ---- */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{box-sizing:border-box;padding-block:8px 10px}
+.app{height:100%;gap:clamp(6px,1.4vh,12px)}
+header{flex:none;padding-block:0}
+.brand svg{width:28px;height:28px}.brand b{font-size:22px}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(7px,1.4vh,14px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen > button:first-of-type{margin-top:auto}
+h1{font-size:clamp(26px,5vh,40px)}
+.phase,.label{font-size:11px}
+.lede,.steps{font-size:clamp(13.5px,2vh,16px);line-height:1.4}
+.steps{padding:clamp(8px,1.3vh,14px) 14px clamp(8px,1.3vh,14px) 30px;gap:3px}
+.btn{padding:clamp(11px,1.9vh,16px) 18px;flex:none}
+.stepper button{height:clamp(40px,5.6vh,52px);width:46px}
+.stepper output{font-size:26px;width:52px}
+.switch{padding:clamp(8px,1.3vh,14px) 14px}
+.seg button{padding:clamp(7px,1.2vh,10px) 6px;font-size:13px}
+.namegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.namegrid input[type=text]{padding:clamp(9px,1.5vh,12px) 12px;font-size:16px}
+.plist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.plist .pbtn{flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-width:0;padding:clamp(6px,1.2vh,14px) 12px;font-size:clamp(15px,2.3vh,18px);overflow-wrap:anywhere}
+.screen .link{padding:2px 4px;flex:none}
+.plist{gap:clamp(5px,1vh,8px)}
+.plist .pbtn .st{font-size:10.5px}
+.plist .wide{grid-column:1/-1}
+.progress{flex:none}
+.clock{font-size:min(30vw,15vh)}
+.clock.small{font-size:min(16vw,8vh)}
+.clockwrap{padding:8px 16px 10px;gap:2px}
+.peekword{min-height:1.1em;font-size:26px}
+.secret{min-height:0;flex:1;gap:clamp(10px,2vh,18px)}
+.secret.haspass{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+.secret .who{font-size:clamp(40px,8vh,56px)}
+.secretword{font-size:clamp(40px,9vh,64px)}
+.choice .pbtn{padding:clamp(12px,2.2vh,20px)}
+.drum{min-height:0;flex:1}
+.drumnum{font-size:min(44vw,26vh)}
+.tbox{padding:10px 14px}.tbox .n{font-size:clamp(36px,7vh,56px)}
+.bars{gap:6px}
+details{padding:8px 14px;flex:none}
+.card{width:auto;height:min(32vh,250px);flex:none}
+.verdict{padding:clamp(12px,2.2vh,22px) 14px;gap:6px;flex:none}
+.verdict .big{font-size:clamp(34px,7vh,52px)}
+.wordline{font-size:clamp(18px,3vh,26px)}
+.roles{grid-template-columns:1fr 1fr;gap:5px}
+.roles li{flex-direction:column;gap:0;min-width:0;padding:clamp(5px,1vh,10px) 10px;overflow-wrap:anywhere}
+.note{padding:clamp(8px,1.4vh,14px) 14px}
+.confirmbar{flex:none}
+.rotate{display:none;position:fixed;inset:0;z-index:60;background:var(--ink);color:var(--bone);flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px}
+.rotate svg{width:64px;height:64px}
+.rotate b{font-family:var(--f-display);font-weight:900;font-size:34px;text-transform:uppercase}
+.rotate span{color:var(--mute)}
+@media (prefers-reduced-motion:no-preference){.rotate svg{animation:tilt 1.6s ease-in-out infinite}}
+@keyframes tilt{0%,30%{transform:rotate(-90deg)}60%,100%{transform:rotate(0)}}
+@media (orientation:landscape) and (max-height:520px){.rotate{display:flex}}
+.pbtn:disabled{opacity:.35;cursor:not-allowed;border-style:dashed}
+.claim{border-color:var(--insider);color:var(--insider);font-size:15px}
+.rolename{font-size:clamp(38px,7vh,52px)}
+.rolename.insider,.rolename.follower{color:var(--insider)}
+.rolename.common{color:var(--common)}
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="rotate" role="alert"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="14" y="4" width="20" height="40" rx="4" fill="none" stroke="var(--gold)" stroke-width="3"/><circle cx="24" cy="38" r="2" fill="var(--gold)"/></svg><b>Turn your phone upright</b><span>Insider Black plays in portrait.</span></div>
+
+<script>
+(function(){
+  const KEY = 'insider-black-referee-v1';
+  const blank = () => ({screen:'setup', count:5, names:Array(8).fill(''), master:0, follower:false,
+    roles:{}, entry:null, guesser:null, v1:{}, v2:{}, tiePick:null, confirmReset:false, err:'',
+    minutes:5, discMode:'left', word:'', qa:'ready', endAt:null, remaining:null, discEnd:null, discBeeped:false});
+  const ROUND_KEYS = {roles:{}, guesser:null, v1:{}, v2:{}, tiePick:null, entry:null, word:'', qa:'ready', endAt:null, remaining:null, discEnd:null, discBeeped:false, accused:null, how:null, revealStage:null, seen:{}};
+  const newRound = () => { for (const k in ROUND_KEYS) S[k] = JSON.parse(JSON.stringify(ROUND_KEYS[k])); };
+  const fmt = ms => { const s = Math.max(0, Math.ceil(ms/1000)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
+  let S = blank();
+  try { const saved = JSON.parse(localStorage.getItem(KEY)); if (saved && saved.screen) S = Object.assign(blank(), saved); } catch(e){}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const names = () => S.names.slice(0, S.count).map((n,i) => n.trim() || `Player ${i+1}`);
+  const N = i => esc(names()[i]);
+  const idxs = () => [...Array(S.count).keys()];
+  const nonMaster = () => idxs().filter(i => i !== S.master);
+  const followerOn = () => S.follower && S.count >= 6;
+  const roleOf = i => i === S.master ? 'master' : S.roles[i];
+  const ROLE = {master:'Master', common:'Commoner', insider:'Insider', follower:'Follower'};
+  const insiderIdx = () => nonMaster().find(i => S.roles[i] === 'insider');
+
+  const WORDS = {easy:["AEROPLANE", "AIRPORT", "APPLE", "ASTRONAUT", "BACKPACK", "BALLOON", "BANANA", "BEACH", "BED", "BEE", "BICYCLE", "BISCUIT", "BLANKET", "BOAT", "BUCKET", "BUS", "CAMERA", "CANDLE", "CAR", "CARROT", "CASTLE", "CAT", "CHAIR", "CHEESE", "CHEF", "CHESS", "CHOCOLATE", "CLOCK", "CLOUD", "CLOWN", "COMPUTER", "COW", "DESERT", "DOCTOR", "DOG", "DOLPHIN", "DOOR", "DRUM", "DUCK", "EGG", "ELEPHANT", "FARM", "FARMER", "FIREFIGHTER", "FOOTBALL", "FOREST", "FROG", "GIRAFFE", "GLASSES", "GLOVE", "GOLF", "GUITAR", "HAMMER", "HAT", "HELICOPTER", "HORSE", "HOSPITAL", "ICE CREAM", "ISLAND", "JACKET", "KEY", "KITE", "LADDER", "LAMP", "LIBRARY", "LION", "MIRROR", "MONKEY", "MOON", "MOUNTAIN", "MUSEUM", "NURSE", "OWL", "PANCAKE", "PENGUIN", "PHONE", "PIANO", "PIG", "PILLOW", "PILOT", "PIZZA", "POLICE OFFICER", "POPCORN", "RABBIT", "RADIO", "RAINBOW", "RING", "RIVER", "ROCKET", "SANDWICH", "SCARF", "SCHOOL", "SCISSORS", "SHARK", "SHEEP", "SHOE", "SKATEBOARD", "SNAKE", "SNOW", "SOCK", "SOFA", "SPIDER", "STAR", "SUBMARINE", "SUN", "SWIMMING", "TABLE", "TEACHER", "TELEVISION", "TENNIS", "THUNDER", "TIGER", "TOOTHBRUSH", "TORCH", "TRACTOR", "TRAIN", "TRAMPOLINE", "TRUMPET", "UMBRELLA", "VOLCANO", "WALLET", "WATCH", "WHALE", "WINDOW", "ZOO"], hard:["ACCORDION", "ANCHOR", "ARCHAEOLOGIST", "AVALANCHE", "AVOCADO", "BAGPIPES", "BATTERY", "BIRTHDAY", "BUNGEE JUMP", "CARAVAN", "CARNIVAL", "CATHEDRAL", "CHAMELEON", "CHANDELIER", "CHRISTMAS", "CIRCUS", "COCONUT", "COLOSSEUM", "COMPASS", "CROISSANT", "CROWN", "CURRY", "DEMOCRACY", "DETECTIVE", "DINOSAUR", "DRAGON", "EARTHQUAKE", "ECHO", "ECLIPSE", "ELECTRICITY", "ESCALATOR", "FERRIS WHEEL", "FINGERPRINT", "FIREWORKS", "FLAMINGO", "FONDUE", "FOSSIL", "FUNERAL", "GHOST", "GLACIER", "GRAVITY", "GREENHOUSE", "HAIRCUT", "HALLOWEEN", "HARP", "HEDGEHOG", "HELMET", "HICCUPS", "HOT AIR BALLOON", "HOURGLASS", "ICEBERG", "IGLOO", "INTERNET", "JELLYFISH", "JUDGE", "LASAGNE", "LIFEGUARD", "LIGHTHOUSE", "MAGICIAN", "MAGNET", "MAP", "MARATHON", "MARSHMALLOW", "MERMAID", "MICROSCOPE", "NIGHTMARE", "NINJA", "OCTOPUS", "OLYMPICS", "ORCHESTRA", "OXYGEN", "PARACHUTE", "PASSPORT", "PASSWORD", "PEACOCK", "PINEAPPLE", "PIRATE", "PLUMBER", "PRETZEL", "PRISON", "PYRAMID", "REFEREE", "ROBOT", "ROLLERCOASTER", "SATELLITE", "SAXOPHONE", "SCARECROW", "SHADOW", "SHIELD", "SKELETON", "SNEEZE", "SNOWMAN", "SPACE STATION", "SPY", "STONEHENGE", "SUNBURN", "SURGEON", "SUSHI", "SWORD", "TATTOO", "TELESCOPE", "TENT", "THRONE", "TORNADO", "TREASURE", "TREEHOUSE", "UKULELE", "VACCINE", "VAMPIRE", "VENDING MACHINE", "WEDDING", "WINDMILL", "WIZARD", "XYLOPHONE", "YAWN", "ZIP WIRE"]};
+  function randomWord(level){ const used = S.used||[]; let pool = WORDS[level].filter(w => !used.includes(w) && w !== (S.entry&&S.entry.pick));
+    if (!pool.length) pool = WORDS[level]; return pool[Math.floor(Math.random()*pool.length)]; }
+  const eye = `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M3 20c5-8 11-12 17-12s12 4 17 12c-5 8-11 12-17 12S8 28 3 20z" fill="none" stroke="var(--gold)" stroke-width="2.5"/><circle cx="20" cy="20" r="6.5" fill="var(--gold)"/><circle cx="20" cy="20" r="2.6" fill="var(--ink)"/></svg>`;
+
+  function header(){
+    const reset = ['setup','setup2'].includes(S.screen) ? '' : `<button class="link" data-act="askReset">Restart</button>`;
+    return `<header><div class="brand">${eye}<div><b>Insider Black</b><small>Vote referee</small></div></div>${reset}</header>
+    ${S.confirmReset ? `<div class="confirmbar"><span>End this round and go back to setup? Names are kept.</span>
+      <button class="btn ghost" data-act="cancelReset">Keep playing</button><button class="btn danger" data-act="doReset">Restart</button></div>` : ''}`;
+  }
+  const progress = (done, total) => `<div class="progress" aria-label="${done} of ${total}">${Array.from({length:total},(_,k)=>`<span class="${k<done?'on':''}"></span>`).join('')}</div>`;
+
+  /* ---------- screens ---------- */
+  const screens = {
+    setup(){
+      const rows = idxs().map(i => `<input type="text" id="name-${i}" data-name="${i}" value="${esc(S.names[i])}" placeholder="Player ${i+1}" autocomplete="off" maxlength="18" aria-label="Player ${i+1} name">`).join('');
+      return `<div><div class="phase">Setup 1 of 2</div><h1>Who's playing?</h1></div>
+      <div class="row" style="justify-content:space-between"><span class="label">Players</span>
+        <div class="stepper"><button data-act="dec" ${S.count<=4?'disabled':''} aria-label="Fewer players">−</button><output>${S.count}</output><button data-act="inc" ${S.count>=8?'disabled':''} aria-label="More players">+</button></div></div>
+      <div class="namegrid">${rows}</div>
+      ${S.err?`<p class="err">${esc(S.err)}</p>`:''}
+      <button class="btn" data-act="toSetup2">Next: choose the Master</button>`;
+    },
+
+    setup2(){
+      return `<div><div class="phase">Setup 2 of 2</div><h1>Who's the Master?</h1></div>
+      <div class="plist">${idxs().map(i => `<button class="pbtn" data-act="master" data-i="${i}" aria-pressed="${i===S.master}">${N(i)}<span class="st">${i===S.master?'Master':''}</span></button>`).join('')}</div>
+      <div class="switch"><div><div class="t">Use the Follower card</div><div class="s">${S.count>=6?'Secretly on the Insider\u2019s side':'Needs 6 or more players'}</div></div>
+        <button class="sw" role="switch" data-act="follower" aria-checked="${followerOn()}" ${S.count<6?'disabled':''} aria-label="Use the Follower card"></button></div>
+      <div class="row" style="justify-content:space-between"><span class="label">Question time (min)</span>
+        <div class="stepper"><button data-act="minDec" ${S.minutes<=1?'disabled':''} aria-label="Less time">−</button><output>${S.minutes}</output><button data-act="minInc" ${S.minutes>=10?'disabled':''} aria-label="More time">+</button></div></div>
+      <div class="stack" style="gap:6px"><span class="label">Discussion time after a correct guess</span>
+        <div class="seg"><button data-act="disc" data-v="left" aria-pressed="${S.discMode==='left'}">Time left on clock</button><button data-act="disc" data-v="used" aria-pressed="${S.discMode==='used'}">Time used (official)</button></div></div>
+      <button class="btn" data-act="startRoles">Start: ${N(S.master)} enters the word</button>
+      <button class="link" data-act="go" data-to="setup">Back to names</button>`;
+    },
+
+    roles(){
+      const list = nonMaster(); const seen = S.seen||{}; const done = list.filter(i => seen[i]).length;
+      const cards = followerOn() ? `1 Insider, 1 Follower and ${S.count-3} Commoners` : `1 Insider and ${S.count-2} Commoners`;
+      const bad = S.err ? `<div class="note warn"><strong>The entries don't add up, so this deal is void.</strong> ${esc(S.err)} Collect every card, shuffle and deal again. ${N(S.master)} must pick a new word, because someone may have seen this one.</div>
+        <button class="btn danger" data-act="redeal">Redeal: ${N(S.master)} enters a new word</button>` : '';
+      return `<div><div class="phase">Secret roles</div><h1>Find out who you are</h1></div>
+      <p class="lede"><strong>${N(S.master)}</strong> is the Master and has locked in the word. The phone has secretly dealt ${cards}. Pass it round: tap your own name to see your role. Only the Insider sees the word.</p>
+      ${progress(done, list.length)}
+      <div class="plist"><button class="pbtn done wide" data-act="openEntry" data-kind="word" data-i="${S.master}">${N(S.master)} · Master<span class="st">Word locked in</span></button>
+        ${list.map(i => `<button class="pbtn ${seen[i]?'done':''}" data-act="openEntry" data-kind="role" data-i="${i}" ${S.word&&!S.err?'':'disabled'}>${N(i)}<span class="st">${seen[i]?'Seen':'Tap to see'}</span></button>`).join('')}</div>
+      ${bad}
+      ${!S.err ? `<button class="btn" data-act="checkRoles" ${done<list.length?'disabled':''}>${done<list.length?`Waiting for ${list.length-done} more`:'Everyone’s in. Start the round'}</button>` : ''}`;
+    },
+
+    private(){
+      const e = S.entry, who = names()[e.who];
+      if (e.stage === 'confirm') return `<div class="secret">
+        <div class="phase">Pass the phone to</div><div class="who">${esc(who)}</div>
+        <p class="lede">Only ${esc(who)} should look at the screen from here.</p>
+        <button class="btn" data-act="iam">I'm ${esc(who)}</button>
+        <button class="link" data-act="closeEntry">Wrong person, go back</button></div>`;
+      if (e.stage === 'done' && e.kind === 'role') return `<div class="secret haspass">
+        <div class="phase">${esc(who)}, you are the</div>
+        <div class="who rolename ${S.roles[e.who]}">${ROLE[S.roles[e.who]]}</div>
+        <div class="phase">The secret word</div>
+        <div class="secretword">${S.roles[e.who]==='insider' ? esc(S.word) : '?'}</div>
+        <p class="lede">${{
+          insider:'You are the Insider, so you know the word. Help the others find it without getting caught.',
+          common:'Because you are a Commoner, you don’t know the word.',
+          follower:'Because you are the Follower, you don’t know the word. You’re on the Insider’s side.'
+        }[S.roles[e.who]]}</p></div>
+        <button class="passbar" data-act="closeEntry"><span>Tap to pass on</span></button>`;
+      if (e.stage === 'done') return `<div class="secret">
+        <div class="phase">Locked in</div><div class="who">Hidden</div>
+        <p class="lede">${e.kind==='word'?'The word is locked in. Roles have been dealt secretly. Pass the phone round so everyone can see who they are.':'Your vote is recorded. Hand the phone to the next player.'}</p>
+        <button class="btn" data-act="closeEntry">${e.kind==='word'?'Hide and continue':'Hide and pass on'}</button></div>`;
+      if (e.kind === 'word') return `<div class="secret">
+        <div class="phase">${esc(who)} only · Master</div><h1>Choose the secret word</h1>
+        <p class="lede">Type it from a theme card, or let the phone pick one. Only the Insider will be shown it.</p>
+        <div class="seg" style="width:100%;max-width:400px"><button data-act="randWord" data-v="easy">Random easy word</button><button data-act="randWord" data-v="hard">Random hard word</button></div>
+        <input type="text" id="word-input" data-word value="${esc(e.pick||'')}" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="30" aria-label="Secret word">
+        <button class="btn" data-act="lock" id="lock-word" ${(e.pick||'').trim()?'':'disabled'}>Lock in the word</button></div>`;
+      const taken = v => e.kind==='role' && ['insider','follower'].includes(v) && nonMaster().some(i => i!==e.who && S.roles[i]===v);
+      let q, opts;
+      if (e.kind === 'role'){
+        q = 'Which card did you get?';
+        opts = [['common','Commoner','common'],['insider','Insider','insider']].concat(followerOn()?[['follower','Follower','insider']]:[]);
+      } else if (e.kind === 'v1'){
+        q = `Is ${N(S.guesser)} the Insider?`;
+        opts = [['yes','Yes, Insider','insider'],['no','No, not the Insider','common']];
+      } else {
+        q = 'Who is the Insider?';
+        opts = idxs().filter(i => i !== e.who && i !== S.master).map(i => [String(i), names()[i], 'common']);
+      }
+      return `<div class="secret">
+        <div class="phase">${esc(who)} only</div><h1>${q}</h1>
+        <div class="choice">${opts.map(([v,l,t]) => taken(v)
+          ? `<button class="pbtn" disabled>${esc(l)} · already taken</button>`
+          : `<button class="pbtn" data-tone="${t}" data-act="pick" data-v="${v}" aria-pressed="${e.pick===v}">${esc(l)}</button>`).join('')}</div>
+        ${opts.filter(([v]) => taken(v)).map(([v,l]) => `<button class="btn ghost claim" data-act="claim" data-v="${v}">Hey, I was the ${esc(l)}!</button>`).join('')}
+        <button class="btn" data-act="lock" ${e.pick==null?'disabled':''}>Lock it in</button></div>`;
+    },
+
+    qa(){
+      const total = S.minutes*60000;
+      const peek = `<button class="btn ghost peek" data-peek>${N(S.master)}: hold to see the word</button><div class="peekword" id="peekword" aria-live="polite"></div>`;
+      if (S.qa === 'ready') return `<div><div class="phase">Questions</div><h1>Play the round</h1></div>
+        <ol class="steps"><li>Put the phone in the middle where everyone can see the clock.</li>
+          <li>Start the timer. Ask ${N(S.master)} yes/no questions to find the word.</li>
+          <li>The moment someone says the word, tap <strong>Word guessed</strong> to stop the clock.</li></ol>
+        <div class="clockwrap"><span class="label">Question time</span><div class="clock idle">${fmt(total)}</div></div>
+        <button class="btn" data-act="startTimer">Start the timer</button>${peek}`;
+      if (S.qa === 'running') { const rem = S.endAt - Date.now();
+        return `<div><div class="phase">Questions</div><h1>Find the word</h1></div>
+        <div class="clockwrap"><span class="label">Time left</span><div class="clock ${rem<30000?'low':''}" id="clock">${fmt(rem)}</div></div>
+        <button class="btn" data-act="stopTimer">Word guessed. Stop the clock</button>${peek}`; }
+      if (S.qa === 'expired') return `<div><div class="phase">Questions</div><h1>Time's up</h1></div>
+        <div class="clockwrap"><span class="label">Time left</span><div class="clock low">0:00</div></div>
+        <p class="lede">If nobody found the word, everyone loses this round.</p>
+        <button class="btn danger" data-act="timeout">Nobody guessed it</button>
+        <button class="btn ghost" data-act="buzzer">It was guessed right on the buzzer</button>`;
+      // stopped
+      const disc = discussMs(); const pick = S.guesser != null;
+      return `<div><div class="phase">Word guessed</div><h1>Who said it?</h1></div>
+        <div class="clockwrap"><span class="label">Clock stopped · discussion time</span><div class="clock small">${fmt(disc)}</div></div>
+        <div class="plist">${nonMaster().map(i => `<button class="pbtn" data-act="guesser" data-i="${i}" aria-pressed="${S.guesser===i}">${N(i)}<span class="st">${S.guesser===i?'Guesser':''}</span></button>`).join('')}</div>
+        <button class="btn" data-act="startDiscuss" ${pick?'':'disabled'}>${pick?`${N(S.guesser)} guessed it. Start discussion`:'Pick the guesser'}</button>
+        <button class="link" data-act="resumeTimer">Wrong word? Restart the clock</button>`;
+    },
+
+    discuss(){
+      const rem = S.discEnd - Date.now(); const over = rem <= 0;
+      return `<div><div class="phase">Discussion</div><h1>Who is the Insider?</h1></div>
+      <p class="wordline">The word was ${esc(S.word)}</p>
+      <div class="clockwrap"><span class="label">${over?'Discussion over':'Discussion time left'}</span><div class="clock ${rem<30000?'low':''}" id="clock">${fmt(rem)}</div></div>
+      <p class="lede">Everyone, including the Master, talks about who seemed to know too much. Then vote on whether <strong>${N(S.guesser)}</strong> is the Insider.</p>
+      <button class="btn ${over?'':'ghost'}" data-act="toVote1">${over?'Time’s up. Go to the vote':'Done talking. Go to the vote'}</button>`;
+    },
+
+    vote1(){
+      const voters = idxs().filter(i => i !== S.guesser); const done = voters.filter(i => S.v1[i]).length;
+      return `<div><div class="phase">Vote 1 of 2</div><h1>Was ${N(S.guesser)} the Insider?</h1></div>
+      <ol class="steps"><li>Everyone except ${N(S.guesser)} votes Yes or No in secret. The Master votes too.</li>
+        <li>More Yes than No counts as a majority. A tie is not a majority.</li></ol>
+      ${progress(done, voters.length)}
+      <div class="plist">${voters.map(i => `<button class="pbtn ${S.v1[i]?'done':''}" data-act="openEntry" data-kind="v1" data-i="${i}">${N(i)}<span class="st">${S.v1[i]?'Voted':'Tap to vote'}</span></button>`).join('')}</div>
+      <button class="btn" data-act="go" data-to="vote1Reveal" ${done<voters.length?'disabled':''}>${done<voters.length?`Waiting for ${voters.length-done} more`:'Reveal the votes'}</button>`;
+    },
+
+    vote1Reveal(){
+      const voters = idxs().filter(i => i !== S.guesser);
+      const yes = voters.filter(i => S.v1[i]==='yes'), no = voters.filter(i => S.v1[i]==='no');
+      const maj = yes.length > no.length;
+      return `<div><div class="phase">Vote 1 result</div><h1>${maj?'The table says Insider':'No majority'}</h1></div>
+      <div class="tally"><div class="tbox ${maj?'win':''}"><div class="label">Yes</div><div class="n">${yes.length}</div></div>
+        <div class="tbox ${!maj?'win':''}"><div class="label">No</div><div class="n">${no.length}</div></div></div>
+      <details><summary>Who voted what</summary><ul class="ledger">${voters.map(i=>`<li><b>${N(i)}</b> voted ${S.v1[i]==='yes'?'Yes':'No'}</li>`).join('')}</ul></details>
+      <p class="lede">${maj?`Majority thinks <strong>${N(S.guesser)}</strong> is the Insider. If they are, the Master and Commoners win. If not, the Insider wins.`
+        :`If <strong>${N(S.guesser)}</strong> is secretly the Insider, the Insider wins. If not, everyone votes again.`}</p>
+      <button class="btn" data-act="go" data-to="card1">Reveal ${N(S.guesser)}'s card</button>`;
+    },
+
+    card1(){
+      const g = S.guesser, r = roleOf(g), isIns = r === 'insider';
+      const maj = votesYes() > votesNo();
+      let next;
+      if (isIns || maj) next = `<button class="btn" data-act="finish" data-how="${isIns ? (maj?'caught':'slipped') : 'wrongGuesser'}">See who won</button>`;
+      else next = `<div class="note"><strong>Not the Insider, and no majority.</strong> On to the second vote. Everyone, including ${N(g)} and the Master, picks who they think the Insider is.</div>
+        <button class="btn" data-act="go" data-to="vote2">Start vote 2</button>`;
+      return `<div><div class="phase">The guesser's card</div><h1>${N(g)} was…</h1></div>
+      <div class="card ${r}">${eye}<div class="r">${ROLE[r]}</div></div>${next}`;
+    },
+
+    vote2(){
+      const voters = idxs(); const done = voters.filter(i => S.v2[i] != null).length;
+      return `<div><div class="phase">Vote 2 of 2</div><h1>Find the Insider</h1></div>
+      <ol class="steps"><li>Everyone votes in secret for who they think the Insider is. You can't vote for yourself or the Master.</li>
+        <li>The player with the most votes has their card revealed.</li>
+        <li>If there's a tie, ${N(S.guesser)} casts the deciding vote.</li></ol>
+      ${progress(done, voters.length)}
+      <div class="plist">${voters.map(i => `<button class="pbtn ${S.v2[i]!=null?'done':''}" data-act="openEntry" data-kind="v2" data-i="${i}">${N(i)}<span class="st">${S.v2[i]!=null?'Voted':'Tap to vote'}</span></button>`).join('')}</div>
+      <button class="btn" data-act="go" data-to="vote2Reveal" ${done<voters.length?'disabled':''}>${done<voters.length?`Waiting for ${voters.length-done} more`:'Reveal the votes'}</button>`;
+    },
+
+    vote2Reveal(){
+      const t = tally2(); const max = Math.max(...Object.values(t));
+      const tied = Object.keys(t).map(Number).filter(i => t[i] === max);
+      const cands = nonMaster().slice().sort((a,b)=>(t[b]||0)-(t[a]||0));
+      const bars = cands.map(i => `<div class="bar ${t[i]===max?'top':''}"><span class="nm">${N(i)}</span><div class="track"><div class="fill" style="width:${max?((t[i]||0)/max*100):0}%"></div></div><span class="c">${t[i]||0}</span></div>`).join('');
+      let action;
+      if (tied.length === 1) action = `<p class="lede"><strong>${N(tied[0])}</strong> has the most votes.</p><button class="btn" data-act="accuse" data-i="${tied[0]}">Reveal ${N(tied[0])}'s card</button>`;
+      else action = `<div class="note"><strong>Tie between ${tied.map(N).join(' and ')}.</strong> ${N(S.guesser)} casts the deciding vote. Choose out loud, then tap.</div>
+        <div class="plist">${tied.map(i => `<button class="pbtn" data-act="tiePick" data-i="${i}" aria-pressed="${S.tiePick===i}">${N(i)}</button>`).join('')}</div>
+        <button class="btn" data-act="accuse" data-i="${S.tiePick}" ${S.tiePick==null?'disabled':''}>${S.tiePick==null?`${N(S.guesser)} decides`:`Reveal ${N(S.tiePick)}'s card`}</button>`;
+      return `<div><div class="phase">Vote 2 result</div><h1>The votes are in</h1></div>
+      <div class="bars">${bars}</div>
+      <details><summary>Who voted for whom</summary><ul class="ledger">${idxs().map(i=>`<li><b>${N(i)}</b> → ${N(S.v2[i])}</li>`).join('')}</ul></details>
+      ${action}`;
+    },
+
+    card2(){
+      const a = S.accused, r = roleOf(a);
+      return `<div><div class="phase">The accused's card</div><h1>${N(a)} was…</h1></div>
+      <div class="card ${r}">${eye}<div class="r">${ROLE[r]}</div></div>
+      <button class="btn" data-act="finish" data-how="${r==='insider'?'found':'missed'}">See who won</button>`;
+    },
+
+    result(){
+      const how = S.how; const ins = insiderIdx(); const fol = nonMaster().find(i => S.roles[i]==='follower');
+      const teamC = idxs().filter(i => ['master','common'].includes(roleOf(i)));
+      const teamI = idxs().filter(i => ['insider','follower'].includes(roleOf(i)));
+      const table = {
+        timeout:['none','Everyone loses','Nobody found the word in time, so there are no winners.'],
+        caught:['common','Master & Commoners win',`The majority named ${N(S.guesser)} and they were the Insider.`],
+        slipped:['insider','Insider wins',`${N(S.guesser)} guessed the word as the Insider and the table didn't call it.`],
+        wrongGuesser:['insider','Insider wins',`The majority wrongly named ${N(S.guesser)}, who was a ${ROLE[roleOf(S.guesser)]}.`],
+        found:['common','Master & Commoners win',`Vote 2 found the Insider: ${N(S.accused)}.`],
+        missed:['insider','Insider wins',`Vote 2 picked ${N(S.accused)}, who was a ${ROLE[roleOf(S.accused)]}. The real Insider was ${N(ins)}.`]
+      }[how];
+      const winners = table[0]==='common'?teamC:table[0]==='insider'?teamI:[];
+      if (S.revealStage !== 'done') return `<div class="drum"><div class="phase">Every card is about to be revealed</div><h1>And the winner is…</h1>
+        <div class="drumnum" id="drumnum">3</div><p class="lede">All eyes on the phone.</p></div>`;
+      return `<div class="verdict boom v-${table[0]}"><div class="phase">Final result</div><div class="big">${table[1]}</div><p class="lede">${table[2]}</p>
+        ${winners.length?`<div class="wchips">${winners.map((w,k)=>`<span class="wchip" style="--d:${k}">${N(w)}</span>`).join('')}</div>`:''}</div>
+      ${S.word?`<p class="wordline" style="text-align:center">The word was ${esc(S.word)}</p>`:''}
+      <div class="stack"><span class="label">Everyone's cards</span><ul class="roles">${idxs().map((i,k)=>`<li class="${winners.includes(i)?'w':''}" style="--d:${k}"><span>${N(i)}${winners.includes(i)?' <span class="trophy">· won</span>':''}</span><span class="rl ${roleOf(i)}">${ROLE[roleOf(i)]}</span></li>`).join('')}</ul></div>
+      ${fol!=null?`<p class="lede">The Follower wins or loses with the Insider.</p>`:''}
+      <button class="btn" data-act="again">Play another round</button>`;
+    }
+  };
+
+  function deal(){
+    const ids = nonMaster().slice();
+    for (let k = ids.length-1; k > 0; k--){ const j = Math.floor(Math.random()*(k+1)); [ids[k], ids[j]] = [ids[j], ids[k]]; }
+    S.roles = {}; S.seen = {};
+    ids.forEach((id,k) => S.roles[id] = k===0 ? 'insider' : (k===1 && followerOn()) ? 'follower' : 'common');
+  }
+  function votesYes(){ return idxs().filter(i => i!==S.guesser && S.v1[i]==='yes').length; }
+  function votesNo(){ return idxs().filter(i => i!==S.guesser && S.v1[i]==='no').length; }
+  function tally2(){ const t={}; nonMaster().forEach(i=>t[i]=0); idxs().forEach(i=>{ if(S.v2[i]!=null) t[S.v2[i]]=(t[S.v2[i]]||0)+1; }); return t; }
+
+  /* ---------- actions ---------- */
+  const app = document.getElementById('app');
+  function render(){ app.innerHTML = header() + `<main class="screen">${screens[S.screen]()}</main>`; save();
+    if (S.screen === 'result') { if (S.revealStage !== 'done') startDrum(); else if (S.justRevealed) { S.justRevealed = false; save(); celebrate(); } } }
+
+  /* ---------- the big reveal ---------- */
+  const calm = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function tone(f, t, d, type, vol){ try { if (!audio) return; const o = audio.createOscillator(), g = audio.createGain(); o.type = type||'triangle'; o.frequency.value = f;
+    o.connect(g); g.connect(audio.destination); const s = audio.currentTime + t;
+    g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(vol||.35, s+.02); g.gain.exponentialRampToValueAtTime(.0001, s+d); o.start(s); o.stop(s+d+.05); } catch(e){} }
+  function drumroll(){ for (let k=0;k<14;k++) tone(110 + k*4, k*.055, .05, 'square', .12); }
+  let drumRunning = false;
+  function startDrum(){
+    if (drumRunning) return; drumRunning = true; let n = 3;
+    const show = () => { const el = document.getElementById('drumnum'); if (el) { el.textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+      drumroll(); tone(220 + (3-n)*110, .78, .12, 'square', .2); try { navigator.vibrate && navigator.vibrate(60); } catch(e){} };
+    show();
+    const iv = setInterval(() => { n--; if (n > 0) { show(); return; }
+      clearInterval(iv); drumRunning = false; S.revealStage = 'done'; S.justRevealed = true; render(); window.scrollTo(0,0); }, 950);
+  }
+  function celebrate(){
+    const team = S.how==='timeout' ? 'none' : ['caught','found'].includes(S.how) ? 'common' : 'insider';
+    if (team === 'none') { [392, 370, 349, 262].forEach((f,k) => tone(f, k*.38, k===3?.9:.34, 'sawtooth', .18)); try { navigator.vibrate && navigator.vibrate(500); } catch(e){} return; }
+    [523, 659, 784, 1047].forEach((f,k) => tone(f, k*.12, k===3?.7:.14, 'triangle', .35)); tone(1319, .62, .7, 'triangle', .2);
+    try { navigator.vibrate && navigator.vibrate([80,60,80,60,250]); } catch(e){}
+    if (calm()) return;
+    const css = getComputedStyle(document.documentElement);
+    const cols = [css.getPropertyValue('--gold'), css.getPropertyValue(team==='common'?'--common':'--insider'), css.getPropertyValue('--bone')].map(s=>s.trim());
+    const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
+    const ctx = c.getContext('2d'); const dpr = Math.min(2, window.devicePixelRatio||1);
+    const W = c.width = innerWidth*dpr, H = c.height = innerHeight*dpr;
+    const bits = Array.from({length:160}, (_,k) => ({ x: W/2 + (Math.random()-.5)*W*.2, y: H*.32, vx: (Math.random()-.5)*16*dpr, vy: (-Math.random()*16-6)*dpr,
+      r: Math.random()*Math.PI, vr: (Math.random()-.5)*.35, w: (6+Math.random()*8)*dpr, h: (4+Math.random()*6)*dpr, col: cols[k%cols.length] }));
+    const t0 = performance.now();
+    (function frame(t){ const age = t - t0; ctx.clearRect(0,0,W,H);
+      bits.forEach(b => { b.vy += .45*dpr; b.vx *= .99; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+        ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.r); ctx.globalAlpha = Math.max(0, 1 - age/4200); ctx.fillStyle = b.col; ctx.fillRect(-b.w/2,-b.h/2,b.w,b.h*Math.abs(Math.cos(b.r*2))+1); ctx.restore(); });
+      if (age < 4200) requestAnimationFrame(frame); else c.remove(); })(t0);
+  }
+  const go = to => { S.screen = to; S.err=''; render(); window.scrollTo(0,0); };
+
+  function discussMs(){ const total = S.minutes*60000; return S.discMode==='left' ? S.remaining : total - S.remaining; }
+
+  let audio = null;
+  function unlockAudio(){ try { audio = audio || new (window.AudioContext||window.webkitAudioContext)(); audio.resume && audio.resume(); } catch(e){} }
+  function beep(){
+    try { if (audio) [0, .35, .7].forEach(t => { const o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+      g.gain.setValueAtTime(.0001, audio.currentTime+t); g.gain.exponentialRampToValueAtTime(.4, audio.currentTime+t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001, audio.currentTime+t+.25); o.start(audio.currentTime+t); o.stop(audio.currentTime+t+.3); }); } catch(e){}
+    try { navigator.vibrate && navigator.vibrate([300,150,300]); } catch(e){}
+  }
+  let wake = null;
+  function keepAwake(){ try { navigator.wakeLock && navigator.wakeLock.request('screen').then(w => wake = w).catch(()=>{}); } catch(e){} }
+
+  setInterval(() => {
+    const el = document.getElementById('clock'); const now = Date.now();
+    if (S.screen === 'qa' && S.qa === 'running') {
+      const rem = S.endAt - now;
+      if (rem <= 0) { S.qa = 'expired'; beep(); render(); return; }
+      if (el) { el.textContent = fmt(rem); el.classList.toggle('low', rem < 30000); }
+    } else if (S.screen === 'discuss') {
+      const rem = S.discEnd - now;
+      if (rem <= 0 && !S.discBeeped) { S.discBeeped = true; beep(); render(); return; }
+      if (el) { el.textContent = fmt(rem); el.classList.toggle('low', rem < 30000); }
+    }
+  }, 250);
+
+  const peekOn = on => { const w = document.getElementById('peekword'); if (w) w.textContent = on ? S.word : ''; };
+  app.addEventListener('pointerdown', e => { if (e.target.closest('[data-peek]')) { e.preventDefault(); peekOn(true); } });
+  ['pointerup','pointerleave','pointercancel'].forEach(t => app.addEventListener(t, e => { if (e.target.closest('[data-peek]')) peekOn(false); }));
+  app.addEventListener('contextmenu', e => { if (e.target.closest('[data-peek]')) e.preventDefault(); });
+
+  app.addEventListener('input', e => {
+    const i = e.target.dataset.name; if (i != null) { S.names[+i] = e.target.value; save(); }
+    if (e.target.dataset.word != null && S.entry) { S.entry.pick = e.target.value; const l = document.getElementById('lock-word'); if (l) l.disabled = !e.target.value.trim(); }
+  });
+
+  let triedLock = false;
+  function lockPortrait(){
+    if (triedLock) return; triedLock = true;
+    try { if (!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) return;
+      const el = document.documentElement;
+      const fs = (!document.fullscreenElement && el.requestFullscreen) ? el.requestFullscreen({navigationUI:'hide'}) : Promise.resolve();
+      Promise.resolve(fs).catch(()=>{}).then(() => { try { return screen.orientation && screen.orientation.lock && screen.orientation.lock('portrait'); } catch(e){} }).catch(()=>{});
+    } catch(e){}
+  }
+  app.addEventListener('click', lockPortrait, true);
+  app.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    const i = b.dataset.i != null ? +b.dataset.i : null;
+    switch (b.dataset.act){
+      case 'inc': S.count=Math.min(8,S.count+1); render(); break;
+      case 'dec': S.count=Math.max(4,S.count-1); if(S.master>=S.count) S.master=0; render(); break;
+      case 'master': S.master=i; render(); break;
+      case 'follower': S.follower=!S.follower; render(); break;
+      case 'toSetup2': {
+        const n = names().map(x=>x.toLowerCase());
+        if (new Set(n).size !== n.length){ S.err='Two players have the same name. Make each name different.'; render(); break; }
+        if (S.master>=S.count) S.master=0; go('setup2'); break; }
+      case 'startRoles': {
+        const n = names().map(x=>x.toLowerCase());
+        if (new Set(n).size !== n.length){ S.err='Two players have the same name. Make each name different.'; render(); break; }
+        newRound(); S.err='';
+        S.entry={who:S.master, kind:'word', stage:'confirm', pick:'', back:'setup'}; S.screen='private'; render(); window.scrollTo(0,0); break; }
+      case 'minInc': S.minutes=Math.min(10,S.minutes+1); render(); break;
+      case 'minDec': S.minutes=Math.max(1,S.minutes-1); render(); break;
+      case 'disc': S.discMode=b.dataset.v; render(); break;
+      case 'startTimer': unlockAudio(); keepAwake(); S.endAt=Date.now()+S.minutes*60000; S.qa='running'; render(); break;
+      case 'stopTimer': S.remaining=Math.max(0,S.endAt-Date.now()); S.qa='stopped'; render(); break;
+      case 'resumeTimer': unlockAudio(); S.endAt=Date.now()+S.remaining; S.qa='running'; S.guesser=null; render(); break;
+      case 'buzzer': S.remaining=0; S.qa='stopped'; render(); break;
+      case 'startDiscuss': unlockAudio(); keepAwake(); S.discEnd=Date.now()+discussMs(); S.discBeeped=discussMs()<=0; go('discuss'); break;
+      case 'openEntry': S.entry={who:i, kind:b.dataset.kind, stage:'confirm', pick:null, back:S.screen}; S.screen='private'; render(); window.scrollTo(0,0); break;
+      case 'iam': if (S.entry.kind==='role') { S.seen=S.seen||{}; S.seen[S.entry.who]=true; S.entry.stage='done'; } else S.entry.stage='pick'; render(); break;
+      case 'pick': S.entry.pick=b.dataset.v; render(); break;
+      case 'claim': S.err=`Two players have the ${ROLE[b.dataset.v]} card.`; S.entry=null; S.screen='roles'; render(); break;
+      case 'randWord': S.entry.pick=randomWord(b.dataset.v); render(); break;
+      case 'lock': { const e2=S.entry;
+        if (e2.kind==='word') { S.word=(e2.pick||'').trim().toUpperCase(); if(!S.word) break; S.used=(S.used||[]).concat(S.word).slice(-60); e2.back='roles'; deal(); }
+        else if (e2.kind==='role') S.roles[e2.who]=e2.pick;
+        else if (e2.kind==='v1') S.v1[e2.who]=e2.pick;
+        else S.v2[e2.who]=+e2.pick;
+        e2.stage='done'; e2.pick=null; render(); break; }
+      case 'closeEntry': { const back=S.entry.back; S.entry=null; S.screen=back; render(); window.scrollTo(0,0); break; }
+      case 'checkRoles': {
+        const vals = nonMaster().map(k=>S.roles[k]);
+        const ins = vals.filter(v=>v==='insider').length, fol = vals.filter(v=>v==='follower').length;
+        if (ins!==1) S.err = ins===0 ? 'Nobody recorded the Insider card.' : `${ins} people recorded the Insider card.`;
+        else if (followerOn() && fol!==1) S.err = fol===0 ? 'Nobody recorded the Follower card.' : `${fol} people recorded the Follower card.`;
+        else S.err='';
+        if (S.err) render(); else go('qa'); break; }
+      case 'redeal': newRound(); S.err='';
+        S.entry={who:S.master, kind:'word', stage:'confirm', pick:'', back:'setup2'}; S.screen='private'; render(); break;
+      case 'guesser': S.guesser=i; render(); break;
+      case 'toVote1': S.v1={}; go('vote1'); break;
+      case 'timeout': unlockAudio(); S.how='timeout'; S.revealStage='drum'; go('result'); break;
+      case 'go': S.screen=b.dataset.to; render(); window.scrollTo(0,0); break;
+      case 'tiePick': S.tiePick=i; render(); break;
+      case 'accuse': S.accused=i; go('card2'); break;
+      case 'finish': unlockAudio(); S.how=b.dataset.how; S.revealStage='drum'; go('result'); break;
+      case 'again': newRound(); S.screen='setup2'; S.master=(S.master+1)%S.count; render(); window.scrollTo(0,0); break;
+      case 'askReset': S.confirmReset=true; render(); break;
+      case 'cancelReset': S.confirmReset=false; render(); break;
+      case 'doReset': S.confirmReset=false; newRound(); S.screen='setup2'; render(); window.scrollTo(0,0); break;
+    }
+  });
+
+  const hot = window.claude && window.claude.hot;
+  try { hot && hot.snapshot && hot.snapshot(() => ({S})); } catch(e){}
+  function start(d){ if (d && d.S) S = d.S; render(); }
+  try { hot && hot.ready ? hot.ready(start) : start(hot && hot.data || {}); } catch(e){ start({}); }
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
