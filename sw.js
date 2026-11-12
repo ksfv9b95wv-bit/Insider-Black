@@ -1,5 +1,5 @@
 // Insider Black offline cache. Bump VERSION whenever you upload a new index.html.
-const VERSION = 'insider-v2';
+const VERSION = 'insider-v3';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

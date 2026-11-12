@@ -232,6 +232,9 @@ details{padding:8px 14px;flex:none}
 .rolename{font-size:clamp(38px,7vh,52px)}
 .rolename.insider,.rolename.follower{color:var(--insider)}
 .rolename.common{color:var(--common)}
+.confirmbar{flex-direction:column;align-items:stretch}
+.cbtns{display:flex;gap:8px;flex-wrap:wrap}
+.cbtns .btn{flex:1 1 auto}
 </style>
 
 </head>
@@ -245,7 +248,7 @@ details{padding:8px 14px;flex:none}
   const blank = () => ({screen:'setup', count:5, names:Array(8).fill(''), master:0, follower:false,
     roles:{}, entry:null, guesser:null, v1:{}, v2:{}, tiePick:null, confirmReset:false, err:'',
     minutes:5, discMode:'left', word:'', qa:'ready', endAt:null, remaining:null, discEnd:null, discBeeped:false});
-  const ROUND_KEYS = {roles:{}, guesser:null, v1:{}, v2:{}, tiePick:null, entry:null, word:'', qa:'ready', endAt:null, remaining:null, discEnd:null, discBeeped:false, accused:null, how:null, revealStage:null, seen:{}};
+  const ROUND_KEYS = {reshuffled:0, roles:{}, guesser:null, v1:{}, v2:{}, tiePick:null, entry:null, word:'', qa:'ready', endAt:null, remaining:null, discEnd:null, discBeeped:false, accused:null, how:null, revealStage:null, seen:{}};
   const newRound = () => { for (const k in ROUND_KEYS) S[k] = JSON.parse(JSON.stringify(ROUND_KEYS[k])); };
   const fmt = ms => { const s = Math.max(0, Math.ceil(ms/1000)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
   let S = blank();
@@ -268,10 +271,15 @@ details{padding:8px 14px;flex:none}
   const eye = `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M3 20c5-8 11-12 17-12s12 4 17 12c-5 8-11 12-17 12S8 28 3 20z" fill="none" stroke="var(--gold)" stroke-width="2.5"/><circle cx="20" cy="20" r="6.5" fill="var(--gold)"/><circle cx="20" cy="20" r="2.6" fill="var(--ink)"/></svg>`;
 
   function header(){
-    const reset = ['setup','setup2'].includes(S.screen) ? '' : `<button class="link" data-act="askReset">Restart</button>`;
+    const inSetup = ['setup','setup2'].includes(S.screen);
+    const reset = `<button class="link" data-act="askReset">Reset</button>`;
     return `<header><div class="brand">${eye}<div><b>Insider Black</b><small>Vote referee</small></div></div>${reset}</header>
-    ${S.confirmReset ? `<div class="confirmbar"><span>End this round and go back to setup? Names are kept.</span>
-      <button class="btn ghost" data-act="cancelReset">Keep playing</button><button class="btn danger" data-act="doReset">Restart</button></div>` : ''}`;
+    ${S.confirmReset ? `<div class="confirmbar"><span>${inSetup
+        ? 'Reset everything? This clears all names and settings.'
+        : '<strong>New round</strong> keeps the names and redeals the roles. <strong>Reset everything</strong> clears all names and settings.'}</span>
+      <div class="cbtns"><button class="btn ghost" data-act="cancelReset">${inSetup?'Cancel':'Keep playing'}</button>
+      ${inSetup?'':'<button class="btn ghost" data-act="doReset">New round</button>'}
+      <button class="btn danger" data-act="resetAll">Reset everything</button></div></div>` : ''}`;
   }
   const progress = (done, total) => `<div class="progress" aria-label="${done} of ${total}">${Array.from({length:total},(_,k)=>`<span class="${k<done?'on':''}"></span>`).join('')}</div>`;
 
@@ -296,6 +304,7 @@ details{padding:8px 14px;flex:none}
         <div class="stepper"><button data-act="minDec" ${S.minutes<=1?'disabled':''} aria-label="Less time">−</button><output>${S.minutes}</output><button data-act="minInc" ${S.minutes>=10?'disabled':''} aria-label="More time">+</button></div></div>
       <div class="stack" style="gap:6px"><span class="label">Discussion time after a correct guess</span>
         <div class="seg"><button data-act="disc" data-v="left" aria-pressed="${S.discMode==='left'}">Time left on clock</button><button data-act="disc" data-v="used" aria-pressed="${S.discMode==='used'}">Time used (official)</button></div></div>
+      <p class="lede" style="font-size:13px">When you tap Start, the Insider${followerOn()?' and Follower are':' is'} picked at random from everyone except ${N(S.master)}.</p>
       <button class="btn" data-act="startRoles">Start: ${N(S.master)} enters the word</button>
       <button class="link" data-act="go" data-to="setup">Back to names</button>`;
     },
@@ -311,6 +320,7 @@ details{padding:8px 14px;flex:none}
       <div class="plist"><button class="pbtn done wide" data-act="openEntry" data-kind="word" data-i="${S.master}">${N(S.master)} · Master<span class="st">Word locked in</span></button>
         ${list.map(i => `<button class="pbtn ${seen[i]?'done':''}" data-act="openEntry" data-kind="role" data-i="${i}" ${S.word&&!S.err?'':'disabled'}>${N(i)}<span class="st">${seen[i]?'Seen':'Tap to see'}</span></button>`).join('')}</div>
       ${bad}
+      ${!S.err && S.word && done===0 ? `<button class="link" data-act="reshuffle">Reshuffle the roles${S.reshuffled?` (reshuffled ${S.reshuffled}×)`:''}</button>` : ''}
       ${!S.err ? `<button class="btn" data-act="checkRoles" ${done<list.length?'disabled':''}>${done<list.length?`Waiting for ${list.length-done} more`:'Everyone’s in. Start the round'}</button>` : ''}`;
     },
 
@@ -654,6 +664,8 @@ details{padding:8px 14px;flex:none}
       case 'again': newRound(); S.screen='setup2'; S.master=(S.master+1)%S.count; render(); window.scrollTo(0,0); break;
       case 'askReset': S.confirmReset=true; render(); break;
       case 'cancelReset': S.confirmReset=false; render(); break;
+      case 'resetAll': S = blank(); try { localStorage.removeItem(KEY); } catch(e){} render(); window.scrollTo(0,0); break;
+      case 'reshuffle': if (!Object.keys(S.seen||{}).length) { deal(); S.reshuffled=(S.reshuffled||0)+1; render(); } break;
       case 'doReset': S.confirmReset=false; newRound(); S.screen='setup2'; render(); window.scrollTo(0,0); break;
     }
   });
