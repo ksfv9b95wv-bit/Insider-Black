@@ -324,12 +324,13 @@ details{padding:8px 14px;flex:none}
       if (e.stage === 'done' && e.kind === 'role') return `<div class="secret haspass">
         <div class="phase">${esc(who)}, you are the</div>
         <div class="who rolename ${S.roles[e.who]}">${ROLE[S.roles[e.who]]}</div>
-        <div class="phase">The secret word</div>
-        <div class="secretword">${S.roles[e.who]==='insider' ? esc(S.word) : '?'}</div>
+        ${S.roles[e.who]==='follower'
+          ? `<div class="phase">The Insider is</div><div class="secretword">${N(insiderIdx())}</div>`
+          : `<div class="phase">The secret word</div><div class="secretword">${S.roles[e.who]==='insider' ? esc(S.word) : '?'}</div>`}
         <p class="lede">${{
           insider:'You are the Insider, so you know the word. Help the others find it without getting caught.',
           common:'Because you are a Commoner, you don’t know the word.',
-          follower:'Because you are the Follower, you don’t know the word. You’re on the Insider’s side.'
+          follower:'You don’t know the word, but you know who the Insider is. Protect them: steer suspicion away so they don’t get caught.'
         }[S.roles[e.who]]}</p></div>
         <button class="passbar" data-act="closeEntry"><span>Tap to pass on</span></button>`;
       if (e.stage === 'done') return `<div class="secret">
@@ -491,11 +492,19 @@ details{padding:8px 14px;flex:none}
     }
   };
 
+  // Fair random number 0..n-1 from the phone's secure random generator (no bias, no patterns).
+  function rand(n){
+    try { const lim = Math.floor(0x100000000 / n) * n, buf = new Uint32Array(1);
+      do { crypto.getRandomValues(buf); } while (buf[0] >= lim);
+      return buf[0] % n; } catch(e){ return Math.floor(Math.random()*n); }
+  }
+  // Pick the Insider (and Follower) independently from everyone except the Master.
   function deal(){
-    const ids = nonMaster().slice();
-    for (let k = ids.length-1; k > 0; k--){ const j = Math.floor(Math.random()*(k+1)); [ids[k], ids[j]] = [ids[j], ids[k]]; }
+    const pool = nonMaster().slice();
     S.roles = {}; S.seen = {};
-    ids.forEach((id,k) => S.roles[id] = k===0 ? 'insider' : (k===1 && followerOn()) ? 'follower' : 'common');
+    pool.forEach(id => S.roles[id] = 'common');
+    const ins = pool.splice(rand(pool.length), 1)[0]; S.roles[ins] = 'insider';
+    if (followerOn()) S.roles[pool[rand(pool.length)]] = 'follower';
   }
   function votesYes(){ return idxs().filter(i => i!==S.guesser && S.v1[i]==='yes').length; }
   function votesNo(){ return idxs().filter(i => i!==S.guesser && S.v1[i]==='no').length; }
@@ -604,7 +613,7 @@ details{padding:8px 14px;flex:none}
       case 'startRoles': {
         const n = names().map(x=>x.toLowerCase());
         if (new Set(n).size !== n.length){ S.err='Two players have the same name. Make each name different.'; render(); break; }
-        newRound(); S.err='';
+        newRound(); S.err=''; deal();
         S.entry={who:S.master, kind:'word', stage:'confirm', pick:'', back:'setup'}; S.screen='private'; render(); window.scrollTo(0,0); break; }
       case 'minInc': S.minutes=Math.min(10,S.minutes+1); render(); break;
       case 'minDec': S.minutes=Math.max(1,S.minutes-1); render(); break;
@@ -620,7 +629,7 @@ details{padding:8px 14px;flex:none}
       case 'claim': S.err=`Two players have the ${ROLE[b.dataset.v]} card.`; S.entry=null; S.screen='roles'; render(); break;
       case 'randWord': S.entry.pick=randomWord(b.dataset.v); render(); break;
       case 'lock': { const e2=S.entry;
-        if (e2.kind==='word') { S.word=(e2.pick||'').trim().toUpperCase(); if(!S.word) break; S.used=(S.used||[]).concat(S.word).slice(-60); e2.back='roles'; deal(); }
+        if (e2.kind==='word') { S.word=(e2.pick||'').trim().toUpperCase(); if(!S.word) break; S.used=(S.used||[]).concat(S.word).slice(-60); e2.back='roles'; }
         else if (e2.kind==='role') S.roles[e2.who]=e2.pick;
         else if (e2.kind==='v1') S.v1[e2.who]=e2.pick;
         else S.v2[e2.who]=+e2.pick;
@@ -633,7 +642,7 @@ details{padding:8px 14px;flex:none}
         else if (followerOn() && fol!==1) S.err = fol===0 ? 'Nobody recorded the Follower card.' : `${fol} people recorded the Follower card.`;
         else S.err='';
         if (S.err) render(); else go('qa'); break; }
-      case 'redeal': newRound(); S.err='';
+      case 'redeal': newRound(); S.err=''; deal();
         S.entry={who:S.master, kind:'word', stage:'confirm', pick:'', back:'setup2'}; S.screen='private'; render(); break;
       case 'guesser': S.guesser=i; render(); break;
       case 'toVote1': S.v1={}; go('vote1'); break;
